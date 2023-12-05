@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task List</title>
+    <style>
+        #task-list-container {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        #task-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        #new-task-input {
+            flex-grow: 1;
+            padding: 8px;
+        }
+        #task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+        .task-item.completed {
+            background-color: #f0f0f0;
+        }
+        .task-item input {
+            margin-right: 10px;
+        }
+        .task-item button {
+            background-color: #ff6464;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .task-item button.edit-btn {
+            background-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <template id="task-list-template">
+        <style>
+            #task-list-container {
+                border: 1px solid #ccc;
+                padding: 10px;
+                border-radius: 5px;
+            }
+            #task-form {
+                display: flex;
+                gap: 10px;
+            }
+        </style>
+        <div id="task-list-container">
+            <form id="task-form">
+                <input type="text" id="new-task-input" placeholder="Добавить новую задачу">
+                <button type="submit">Добавить</button>
+            </form>
+            <ul id="task-list"></ul>
+        </div>
+    </template>
+
+    <script>
+        class TaskList extends HTMLElement {
+            constructor() {
+                super();
+                const shadowRoot = this.attachShadow({ mode: 'open' });
+                const template = document.getElementById('task-list-template');
+                const clone = document.importNode(template.content, true);
+                shadowRoot.appendChild(clone);
+
+                this.taskForm = shadowRoot.getElementById('task-form');
+                this.newTaskInput = shadowRoot.getElementById('new-task-input');
+                this.taskList = shadowRoot.getElementById('task-list');
+
+                this.taskForm.addEventListener('submit', this.addTask.bind(this));
+                this.taskList.addEventListener('click', this.handleTaskActions.bind(this));
+            }
+
+            addTask(event) {
+                event.preventDefault();
+                const taskText = this.newTaskInput.value.trim();
+                if (taskText !== '') {
+                    const taskItem = document.createElement('li');
+                    taskItem.classList.add('task-item');
+                    taskItem.innerHTML = `
+                        <input type="checkbox">
+                        <span>${taskText}</span>
+                        <button class="edit-btn">Редактировать</button>
+                        <button class="delete-btn">Удалить</button>
+                    `;
+                    this.taskList.appendChild(taskItem);
+                    this.newTaskInput.value = '';
+                }
+            }
+
+            handleTaskActions(event) {
+                const taskItem = event.target.closest('.task-item');
+                if (!taskItem) return;
+
+                const checkbox = taskItem.querySelector('input[type="checkbox"]');
+                const editButton = taskItem.querySelector('.edit-btn');
+                const deleteButton = taskItem.querySelector('.delete-btn');
+                const taskText = taskItem.querySelector('span');
+
+                if (event.target === checkbox) {
+                    taskItem.classList.toggle('completed');
+                } else if (event.target === editButton) {
+                    const newText = prompt('Введите новый текст задачи', taskText.textContent);
+                    if (newText !== null) {
+                        taskText.textContent = newText;
+                    }
+                } else if (event.target === deleteButton) {
+                    taskItem.remove();
+                }
+            }
+        }
+
+        customElements.define('task-list', TaskList);
+    </script>
+
+    <task-list></task-list>
+</body>
+</html>
